@@ -24,9 +24,10 @@ public class FrequencyPlotter extends PApplet {
 
     public void setup() {
         //----------------
-        reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
+        //reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
+
+        reader = AudioReader.getMicStream(100000);
         out = reader.getOutputStream();
-        //out = MicReader.getMicStream();
     }
 
     public void draw() {
@@ -46,12 +47,12 @@ public class FrequencyPlotter extends PApplet {
                 plt = new ScatterPlot(0, 0, 800, 800);
                 plt.set(Plot.Setting.show_axes, true);
                 plt.set(Plot.Setting.show_border, true);
-                plt.setYDataRange(0, 10);
+                plt.setYDataRange(0, 4);
                 plt.set(Plot.Setting.freeze_y_scale, true);
 
                 // higher frequencies are higher in the array, so we're only displaying lower ones
                 // element 0 is the average signal intensity
-                for (int f = 1; f < results.length / 4; f++) {
+                for (int f = 1; f < results.length / 16; f++) {
                     double magnitude = Math.log10(results[f].abs() + 1);
 
                     plt.plot(f, magnitude).style("-");
@@ -72,6 +73,6 @@ public class FrequencyPlotter extends PApplet {
     }
 
     public static void main(String[] args) {
-        PApplet.main("AudioFrequencyPlotter");
+        PApplet.main("FrequencyPlotter");
     }
 }

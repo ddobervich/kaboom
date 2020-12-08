@@ -6,7 +6,7 @@ import processing.core.PApplet;
 import java.io.ByteArrayOutputStream;
 
 public class SpectrographPlotter extends PApplet {
-    private static final int CHUNK_SIZE = 4096;
+    private static final int WINDOW_SIZE = 4096;
 
     ByteArrayOutputStream out;
     AudioReader reader;
@@ -20,8 +20,8 @@ public class SpectrographPlotter extends PApplet {
     public void setup() {
         //----------------
         //out = model.MicReader.getAudioStreamFor("D:\\JavaWorkspaces\\DavidDobervich\\Shazam\\data\\sweeplin.wav");
-        //reader = AudioReader.getMicStream(5000);
-        reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
+        reader = AudioReader.getMicStream(5000);
+        //reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
         out = reader.getOutputStream();
     }
 
@@ -33,24 +33,18 @@ public class SpectrographPlotter extends PApplet {
         out.reset();
 
         if (b.length > 0) {
-            Complex[][] results = FFT.performFFT(b, CHUNK_SIZE);
+            Complex[][] results = FFT.performFFT(b, WINDOW_SIZE);
 
             for (int i = 0; i < results.length; i++) {
                 int freq = 1;
-                for (int line = 1; line < results[i].length/2; line++) {
-                    // To get the magnitude of the sound at a given frequency slice
-                    // get the abs() from the complex number.
-                    // In this case I use Math.log to get a more managable number (used for color)
+                for (int line = 1; line < results[i].length/8; line++) {
                     double magnitude = Math.log(results[i][freq].abs() + 1);
-
-               /* magnitude = map((float)magnitude, 0 ,120*20,0,256);
-                magnitude = Math.min(magnitude, 255);*/
 
                     int fillColor = color(0, (int) (magnitude * 10), (int) (magnitude * 20));
                     fill(fillColor);
                     stroke(fillColor);
 
-                    float yval = map(line, 0, 4096/2, 800, 0);
+                    float yval = map(line, 0, 4096/8, 800, 0);
                     rect(currentCol + i * blockSizeX, yval, blockSizeX, blockSizeY);
 //                g2d.fillRect(i*blockSizeX, (size-line)*blockSizeY,blockSizeX,blockSizeY);
 
