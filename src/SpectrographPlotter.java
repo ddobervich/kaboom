@@ -16,8 +16,8 @@ public class SpectrographPlotter extends PApplet {
     private static final int WINDOW_SIZE = 4096;
     ByteArrayOutputStream out;
     AudioReader reader;
-    ArrayList<Complex[]> fftFrames;
-    boolean mic = true;
+    ArrayList<Complex[]> fftFrames = new ArrayList<>();
+    boolean mic = false;
 
     public void settings() {
         size(800, 800);
@@ -27,10 +27,10 @@ public class SpectrographPlotter extends PApplet {
         if (mic) {
             reader = AudioReader.getMicStream(5000);
             out = reader.getOutputStream();
-            fftFrames = new ArrayList<>();
         } else {
             reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
-            fftFrames = loadAllDataFrom(reader);
+            byte[] data = reader.readAllData();
+            FFT.performFFT(data, WINDOW_SIZE, fftFrames);
         }
     }
 
@@ -77,24 +77,6 @@ public class SpectrographPlotter extends PApplet {
         }
     }
 
-    private ArrayList<Complex[]> loadAllDataFrom(AudioReader reader) {
-        ByteArrayOutputStream out = reader.getOutputStream();
-
-        while (!reader.isRunning()) {
-            System.out.println("Waiting for audio stream...");
-        }
-
-        System.out.println("Loading audio.");
-        while (reader.isRunning()) {
-            System.out.print(".");
-        }
-
-        byte b[] = out.toByteArray();
-
-        ArrayList<Complex[]> outputFrames = new ArrayList<>();
-        FFT.performFFT(b, WINDOW_SIZE, outputFrames);
-        return outputFrames;
-    }
 
     public static void main(String[] args) {
         PApplet.main("SpectrographPlotter");

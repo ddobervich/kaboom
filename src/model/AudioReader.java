@@ -6,6 +6,7 @@ import javax.sound.sampled.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /***
  * Substantial sections of this code adapted from https://github.com/wsieroci/audio-recognizer
@@ -201,5 +202,20 @@ public class AudioReader {
         boolean signed = true;
         boolean bigEndian = true;
         return new AudioFormat(sampleRate, sampleSizeInBits, channels, signed, bigEndian);
+    }
+
+    public byte[] readAllData() {
+        ByteArrayOutputStream out = this.getOutputStream();
+
+        while (!this.isRunning()) {
+            System.out.println("Waiting for audio stream...");
+        }
+
+        System.out.println("Loading audio.");
+        while (this.isRunning()) {
+            System.out.print(".");
+        }
+
+        return out.toByteArray();
     }
 }
