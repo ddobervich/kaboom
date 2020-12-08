@@ -37,41 +37,38 @@ public class FingerprintLib {
      */
     public static void saveSongFingerPrint(String filePath, String outputDir) throws InterruptedException, IOException {
         AudioReader reader = AudioReader.getAudioStreamFor(filePath);
-        ByteArrayOutputStream out = reader.getOutputStream();
-
-        System.out.println("Loading audio");
-        while (!reader.isRunning()) {
-            System.out.println("Waiting for audio stream...");
-        }
-
-        System.out.print("Reading audio");
-        while (reader.isRunning()) {
-            Thread.sleep(100);
-            System.out.print(".");
-        }
-
-        byte b[] = out.toByteArray();
-
-        Complex[][] fftoutput = FFT.performFFT(b, WINDOW_SIZE);
+        byte[] b = reader.readAllData();
+        Complex[][] fftFrames = FFT.performFFT(b, WINDOW_SIZE);
 
         ArrayList<int[]> allKeyFrequencies = new ArrayList<>();
-        for (Complex[] results : fftoutput) {
-            int[] keyPoints = getKeyFrequenciesFor(results);
+        for (Complex[] frame : fftFrames) {
+            int[] keyPoints = getKeyFrequenciesFor(frame);
             allKeyFrequencies.add(keyPoints);
         }
 
         outputDir = slashify(outputDir);
         String fileName = getFileNameFor(filePath);
         String path = getPathFor(filePath);
+
         writeToFile(outputDir + replaceExtension(fileName,".wav", "-fp.csv"), allKeyFrequencies);
     }
 
+    /***
+     * Ensure correct format for directory string.  Convert backslashes to forward slashes.  Add trailing slash.
+     * @param outputDirectory
+     * @return
+     */
     private static String slashify(String outputDirectory) {
         outputDirectory = outputDirectory.replace('\\', '/');
         if (!outputDirectory.endsWith("/")) outputDirectory += "/";   // add trailing slash
         return outputDirectory;
     }
 
+    /***
+     * Return path not including filename
+     * @param filePath
+     * @return
+     */
     private static String getPathFor(String filePath) {
         filePath = filePath.replace('\\', '/');
         int lastDir = filePath.lastIndexOf("/");
@@ -79,14 +76,26 @@ public class FingerprintLib {
         return filePath.substring(0, lastDir+1);
     }
 
+    /***
+     * Return filename not including path
+     * @param filePath
+     * @return
+     */
     private static String getFileNameFor(String filePath) {
         filePath = filePath.replace('\\', '/');
         int lastDir = filePath.lastIndexOf("/");
         return filePath.substring(lastDir+1);
     }
 
+    /***
+     * Replace file extension in name
+     * @param file
+     * @param oldExtension
+     * @param newExtension
+     * @return
+     */
     private static String replaceExtension(String file, String oldExtension, String newExtension) {
-        int index = file.indexOf(oldExtension);
+        int index = file.indexOf(oldExtension);         // TODO: can probably be shorter with .replace
         if (index == -1) return file+newExtension;
         return file.substring(0,index)+newExtension;
     }
