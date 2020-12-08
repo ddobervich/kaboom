@@ -20,21 +20,14 @@ public class WavePlotter extends PApplet {
         plt.set(Plot.Setting.show_axes, true);
         plt.set(Plot.Setting.show_border, true);
 
-        //----------------
-        reader = AudioReader.getMicStream(5000);
-        //reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
-        out = reader.getOutputStream();
     }
 
     public void draw() {
-        byte b[] = out.toByteArray();
-        out.reset();
-        background(255);
 
-        for (int i = 0; i < b.length; i++) {
-            plt.plot(0, time, b[i]).strokeColor("red").style("-");
-            time++;
-        }
+        // TODO: use AudioReader to get an audio stream
+        // TODO: plot raw data
+
+        plt.plot(0, time, mouseX).strokeColor("red").style("-");
 
         plt.draw(this);
     }

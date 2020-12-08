@@ -22,14 +22,7 @@ public class FrequencyPlotter extends PApplet {
     }
 
     public void setup() {
-        if (mic) {
-            reader = AudioReader.getMicStream(5000);
-            out = reader.getOutputStream();
-        } else {
-            reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
-            byte[] data = reader.readAllData();
-            FFT.performFFT(data, WINDOW_SIZE, fftFrames);
-        }
+        // TODO: get audiostream for the mic or an audio file
     }
 
     public void draw() {
@@ -59,11 +52,7 @@ public class FrequencyPlotter extends PApplet {
             // should be frame.length / 2
 
             // element 0 is the average signal intensity
-            for (int f = 1; f < frame.length / 16; f++) {
-                double magnitude = Math.log10(frame[f].abs() + 1);
-
-                plt.plot(f, magnitude).style("-");
-            }
+            // TODO: loop over audio data and plot frequencies
 
             plt.draw(this);
         }
