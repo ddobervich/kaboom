@@ -1,12 +1,9 @@
 import model.*;
 
-import javax.swing.plaf.synth.SynthToggleButtonUI;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class PerformMatch {
@@ -98,25 +95,23 @@ public class PerformMatch {
         HashMap<Long, List<Match>> db = new HashMap<>();
 
         File[] files = new File(dataDir).listFiles();
-        for (File f : files) {
-            if (f.getName().endsWith(".csv")) {
-                System.out.println("Processing: " + f.getName());
+        for (File file : files) {
+            if (file.getName().endsWith(".csv")) {
+                System.out.println("Processing: " + file.getName());
 
-                List<int[]> keyFreqList = loadFreqList(f);
-                System.out.println("Done parsing file.  Loading results into HashMap.");
-
-                loadDbWithPrintsFrom(db, keyFreqList, f.getName(), spacing);
+                List<int[]> keyFreqList = loadFingerprintsFrom(file);
+                loadDbWithPrints(db, keyFreqList, file.getName(), spacing);
 
                 System.out.println("********************LOADED!***************************");
             } else {
-                System.out.println("Skipping file: " + f.getName());
+                System.out.println("Skipping file: " + file.getName());
             }
         }
 
         return db;
     }
 
-    private static void loadDbWithPrintsFrom(HashMap<Long, List<Match>> db, List<int[]> keyFreqList, String songName, int spacing) {
+    private static void loadDbWithPrints(HashMap<Long, List<Match>> db, List<int[]> keyFreqList, String songName, int spacing) {
         for (int i = 0; i < keyFreqList.size() - spacing - 1; i++) {
             int[] firstRow = keyFreqList.get(i);
             int[] secondRow = keyFreqList.get(i+spacing);
@@ -127,7 +122,7 @@ public class PerformMatch {
         }
     }
 
-    // TODO: cheap fast one; replace with better one later
+    // TODO: cheap easy to program hash; replace with better one later
     private static Long gethashFor(int[] firstRow, int[] secondRow) {
         String s1 = Arrays.toString(firstRow);
         String s2 = Arrays.toString(secondRow);
@@ -146,7 +141,7 @@ public class PerformMatch {
         }
     }
 
-    private static List<int[]> loadFreqList(File f) {
+    private static List<int[]> loadFingerprintsFrom(File f) {
         List<int[]> out = new ArrayList<>();
 
         try (BufferedReader br = new BufferedReader(new FileReader(f))) {
@@ -175,25 +170,6 @@ public class PerformMatch {
         }
 
         return out;
-    }
-
-    public static String readFile(String filePath) {
-        StringBuilder sb = new StringBuilder();
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(filePath));) {
-
-            String line = br.readLine();
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.getProperty("line.separator"));
-                line = br.readLine();
-            }
-
-        } catch (Exception errorObj) {
-            System.err.println("There was a problem reading the " + filePath);
-        }
-
-        return sb.toString();
     }
 
 }
