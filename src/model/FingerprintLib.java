@@ -12,12 +12,6 @@ import java.util.ArrayList;
 public class FingerprintLib {
     private static final String OUTPUT_DIR = "prints/";
 
-    // frequency ranges for identifying loudest frequencies for fingerprints.  I've been getting better results
-    // with 3 intervals rather than 4.
-    public static final int[] RANGES = new int[] {40,120,180,301};
-    private static final int LOWER_FREQ_LIM = RANGES[0];
-    private static final int UPPER_FREQ_LIM = RANGES[RANGES.length-1]-1;
-
     // Windows use to use in FFT.  With sample rate of 44.1 khz = 0.0928 seconds for window size.
     private static final int WINDOW_SIZE = 4096;
 
@@ -128,38 +122,7 @@ public class FingerprintLib {
     }
 
     public static int[] getKeyFrequenciesFor(Complex[] results) {
-        double[] highscores = new double[RANGES.length-1];
-        int[] recordPoints = new int[RANGES.length-1];
-
-        for (int freq = LOWER_FREQ_LIM; freq < UPPER_FREQ_LIM; freq++) {
-
-            //Get the magnitude:
-            double mag = Math.log(results[freq].abs() + 1);
-
-            //Find out which range we are in:
-            int index = getIndex(freq);
-
-            //Save the highest magnitude and corresponding frequency:
-            if (mag > highscores[index]) {
-                highscores[index] = mag;
-                recordPoints[index] = freq;
-            }
-        }
-
-        return recordPoints;
-    }
-
-    /***
-     * This is a kind of ugly method for returning the index freq should have into an int[] where each element is
-     * defined by an interval in the static RANGES int[].  Should probably re-work this...
-     * @param freq
-     * @return
-     */
-    private static int getIndex(int freq) {
-        int i = 0;
-        while(RANGES[i] <= freq) {
-            i++;
-        }
-        return i-1;
+        // TODO: convert frequency list into fingerprint with key frequencies at that time
+        return null;
     }
 }
