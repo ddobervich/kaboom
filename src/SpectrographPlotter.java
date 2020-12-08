@@ -35,7 +35,7 @@ public class SpectrographPlotter extends PApplet {
     }
 
     public void draw() {
-        if (mic) {
+        if (mic) {                          // read next set of frames from the mic
             byte b[] = out.toByteArray();
             out.reset();
 
@@ -44,22 +44,31 @@ public class SpectrographPlotter extends PApplet {
             }
         }
 
-        if (fftFrames.size() > 0) {
-            Complex[] frame = fftFrames.remove(0);
-            displayFrameAtCol(frame, currentCol);
+        if (fftFrames.size() > 0) {                            // if undisplayed frames left
+            Complex[] frame = fftFrames.remove(0);       // remove oldest frame and display
+            displayFrameAtCol(frame, currentCol, 1);
             currentCol += blockSizeX;
 
-            if (currentCol > 800) {
+            if (currentCol > this.width) {                     // screen wrap display
                 currentCol = 0;
                 background(255);
             }
         }
     }
 
-    private void displayFrameAtCol(Complex[] frame, int currentCol) {
-        for (int freq = 1; freq < frame.length / 8; freq++) {
+    /***
+     * Display frequencies for Complex[] frame in window at column currentCol
+     * @param frame output fft frequency data
+     * @param currentCol column to display output at
+     */
+    private void displayFrameAtCol(Complex[] frame, int currentCol, double maxPercentFreqForDisplay) {
+        // upper half of frame[] is reflection of lower half.  So don't include it in calculation.
+        int maxFreq = (int)((frame.length/2)*maxPercentFreqForDisplay);
+
+        // frame[0] contains average signal strength; not a freq... so start at 1
+        for (int freq = 1; freq < maxFreq; freq++) {
             double magnitude = Math.log(frame[freq].abs() + 1);
-            float yval = map(freq, 0, 4096 / 8, 800, 0);
+            float yval = map(freq, 0, maxFreq, 800, 0);  // map from freq range to y-coord range
 
             int fillColor = color(0, (int) (magnitude * 10), (int) (magnitude * 20));
             fill(fillColor);
