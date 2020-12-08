@@ -141,42 +141,42 @@ public class FFT {
 	}
 
 	/***
-	 * Perform model.FFT on audio stream with window size of CHUNK_SIZE.  Output model.Complex[] are added to output ArrayList
-	 * @param audio
-	 * @param CHUNK_SIZE
+	 * Perform model.FFT on audio stream with window size of WINDOW_SIZE.
+	 * Output model.Complex[] are added to output ArrayList
+	 * @param audio raw audio output
+	 * @param WINDOW_SIZE # of samples for single FFT input.  4096 is a good value, corresponding to ~0.1 sec.
+	 *                    This also determines what frequency range the FFT can return.
 	 * @param output
 	 */
-	public static void performFFT(byte[] audio, int CHUNK_SIZE, ArrayList<Complex[]> output) {
-		final int totalSize = audio.length;
-		int amountPossible = totalSize / CHUNK_SIZE;
+	public static void performFFT(byte[] audio, int WINDOW_SIZE, ArrayList<Complex[]> output) {
+		int maxFrames = audio.length / WINDOW_SIZE;
 
 		//For all the chunks:
-		for (int times = 0; times < amountPossible; times++) {
-			Complex[] result = computeFFTAtOffset(audio, times, CHUNK_SIZE);
+		for (int frame = 0; frame < maxFrames; frame++) {
+			Complex[] result = computeFFTAtOffset(audio, frame, WINDOW_SIZE);
 			output.add(result);
 		}
 	}
 
-	public static Complex[][] performFFT(byte[] audio, int CHUNK_SIZE) {
-		final int totalSize = audio.length;
-		int amountPossible = totalSize / CHUNK_SIZE;
+	public static Complex[][] performFFT(byte[] audio, int WINDOW_SIZE) {
+		int numFrames = audio.length / WINDOW_SIZE;
 
 		//When turning into frequency domain we'll need complex numbers:
-		Complex[][] results = new Complex[amountPossible][];
+		Complex[][] results = new Complex[numFrames][];
 
-		//For all the chunks:
-		for (int times = 0; times < amountPossible; times++) {
-			results[times] = computeFFTAtOffset(audio, times, CHUNK_SIZE);
+		//For all the frames:
+		for (int frame = 0; frame < numFrames; frame++) {
+			results[frame] = computeFFTAtOffset(audio, frame, WINDOW_SIZE);
 		}
 
 		return results;
 	}
 
-	private static Complex[] computeFFTAtOffset(byte[] audio, int offset, int CHUNK_SIZE) {
-		Complex[] complex = new Complex[CHUNK_SIZE];
-		for (int i = 0; i < CHUNK_SIZE; i++) {
+	private static Complex[] computeFFTAtOffset(byte[] audio, int offset, int WINDOW_SIZE) {
+		Complex[] complex = new Complex[WINDOW_SIZE];
+		for (int i = 0; i < WINDOW_SIZE; i++) {
 			//Put the time domain data into a complex number with imaginary part as 0:
-			complex[i] = new Complex(audio[(offset * CHUNK_SIZE) + i], 0);
+			complex[i] = new Complex(audio[(offset * WINDOW_SIZE) + i], 0);
 		}
 		//Perform model.FFT analysis on the chunk:
 		return FFT.fft(complex);
