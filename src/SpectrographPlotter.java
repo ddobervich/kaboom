@@ -4,59 +4,50 @@ import model.AudioReader;
 import processing.core.PApplet;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 
 public class SpectrographPlotter extends PApplet {
-    private static final int WINDOW_SIZE = 4096;
+    // ---- DISPLAY VARIABLES ----
+    int blockSizeX = 2;
+    int blockSizeY = 2;
+    int currentCol = 0;
 
+    // ---- AUDIO VARIABLES ----
+    private static final int WINDOW_SIZE = 4096;
     ByteArrayOutputStream out;
     AudioReader reader;
-    private boolean logModeEnabled = false;
-    int currentCol = 0;
+    ArrayList<Complex[]> fftFrames;
+    boolean mic = true;
 
     public void settings() {
         size(800, 800);
     }
 
     public void setup() {
-        //----------------
-        //out = model.MicReader.getAudioStreamFor("D:\\JavaWorkspaces\\DavidDobervich\\Shazam\\data\\sweeplin.wav");
-        reader = AudioReader.getMicStream(5000);
-        //reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
-        out = reader.getOutputStream();
+        if (mic) {
+            reader = AudioReader.getMicStream(5000);
+            out = reader.getOutputStream();
+            fftFrames = new ArrayList<>();
+        } else {
+            reader = AudioReader.getAudioStreamFor("music/01 - Outkast - Hey Ya.wav");
+            fftFrames = loadAllDataFrom(reader);
+        }
     }
 
     public void draw() {
-        int blockSizeX = 1;
-        int blockSizeY = 1;
+        if (mic) {
+            byte b[] = out.toByteArray();
+            out.reset();
 
-        byte b[] = out.toByteArray();
-        out.reset();
-
-        if (b.length > 0) {
-            Complex[][] results = FFT.performFFT(b, WINDOW_SIZE);
-
-            for (int i = 0; i < results.length; i++) {
-                int freq = 1;
-                for (int line = 1; line < results[i].length/8; line++) {
-                    double magnitude = Math.log(results[i][freq].abs() + 1);
-
-                    int fillColor = color(0, (int) (magnitude * 10), (int) (magnitude * 20));
-                    fill(fillColor);
-                    stroke(fillColor);
-
-                    float yval = map(line, 0, 4096/8, 800, 0);
-                    rect(currentCol + i * blockSizeX, yval, blockSizeX, blockSizeY);
-//                g2d.fillRect(i*blockSizeX, (size-line)*blockSizeY,blockSizeX,blockSizeY);
-
-                    // I used a improviced logarithmic scale and normal scale:
-                    if (logModeEnabled && (Math.log10(line) * Math.log10(line)) > 1) {
-                        freq += (int) (Math.log10(line) * Math.log10(line));
-                    } else {
-                        freq++;
-                    }
-                }
+            if (b.length > 0) {
+                FFT.performFFT(b, WINDOW_SIZE, fftFrames);
             }
-            currentCol += results.length * blockSizeX;
+        }
+
+        if (fftFrames.size() > 0) {
+            Complex[] frame = fftFrames.remove(0);
+            displayFrameAtCol(frame, currentCol);
+            currentCol += blockSizeX;
 
             if (currentCol > 800) {
                 currentCol = 0;
@@ -65,7 +56,40 @@ public class SpectrographPlotter extends PApplet {
         }
     }
 
+    private void displayFrameAtCol(Complex[] frame, int currentCol) {
+        for (int freq = 1; freq < frame.length / 8; freq++) {
+            double magnitude = Math.log(frame[freq].abs() + 1);
+            float yval = map(freq, 0, 4096 / 8, 800, 0);
+
+            int fillColor = color(0, (int) (magnitude * 10), (int) (magnitude * 20));
+            fill(fillColor);
+            stroke(fillColor);
+            rect(currentCol, yval, blockSizeX, blockSizeY);
+        }
+    }
+
+    private ArrayList<Complex[]> loadAllDataFrom(AudioReader reader) {
+        ByteArrayOutputStream out = reader.getOutputStream();
+
+        while (!reader.isRunning()) {
+            System.out.println("Waiting for audio stream...");
+        }
+
+        System.out.println("Loading audio.");
+        while (reader.isRunning()) {
+            System.out.print(".");
+        }
+
+        byte b[] = out.toByteArray();
+
+        ArrayList<Complex[]> outputFrames = new ArrayList<>();
+        FFT.performFFT(b, WINDOW_SIZE, outputFrames);
+        return outputFrames;
+    }
+
     public static void main(String[] args) {
         PApplet.main("SpectrographPlotter");
     }
 }
+
+
