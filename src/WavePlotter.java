@@ -9,7 +9,6 @@ public class WavePlotter extends PApplet {
     int time = 0;
     ByteArrayOutputStream out;
     AudioReader reader;
-    ArrayList<Integer> raw = new ArrayList<>();
 
     public void settings() {
         size(800, 800);
