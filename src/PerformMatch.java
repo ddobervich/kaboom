@@ -7,19 +7,19 @@ import java.io.FileReader;
 import java.util.*;
 
 public class PerformMatch {
-    private static final int CHUNK_SIZE = 4096;
+    private static final int WINDOW_SIZE = 4096;
 
     public static void main(String[] args) {
-        HashMap<Integer, List<Match>> database = buildDatabase("prints/", 0);
-        performMatch(database,0);
+        HashMap<Integer, List<Match>> database = buildDatabase("prints/");
+        performMatch(database);
     }
 
-    private static void performMatch(HashMap<Integer, List<Match>> db, int spacing) {
+    private static void performMatch(HashMap<Integer, List<Match>> db) {
         HashMap<String, Integer> songHits = new HashMap<>();
 
         int totalHits = 0;
 
-        ArrayList<Complex[]> fftResults = new ArrayList<Complex[]>();
+        ArrayList<Complex[]> fftFrames = new ArrayList<Complex[]>();
         ArrayList<int[]> keyFreqList = new ArrayList<>();
 
         AudioReader reader = AudioReader.getMicStream(5000);
@@ -33,32 +33,29 @@ public class PerformMatch {
         System.out.print("Reading audio");
         int currentIndex = 0;
         while (reader.isRunning()) {
-            byte b[] = out.toByteArray();
+            byte audioData[] = out.toByteArray();
 
-            // Load results List when ready
-            if (b.length > CHUNK_SIZE) {
+            // Convert batch of audio data into FFT frames
+            if (audioData.length > WINDOW_SIZE) {
                 out.reset();
-                FFT.performFFT(b, CHUNK_SIZE, fftResults);
+                FFT.performFFT(audioData, WINDOW_SIZE, fftFrames);
             }
 
-            // Process results list
-            if (fftResults.size() > 0) {
-                Complex[] results = fftResults.remove(0);
+            // Process results from fftFrames list
+            if (fftFrames.size() > 0) {
+                Complex[] results = fftFrames.remove(0);
 
-                if (results.length > 0) {
-                    int[] keyFreq = FingerprintLib.getKeyFrequenciesFor(results);
-                    System.out.println(currentIndex + " : " + Arrays.toString(keyFreq));
+                int[] keyFreq = FingerprintLib.getKeyFrequenciesFor(results);
+                System.out.println(currentIndex + " : " + Arrays.toString(keyFreq));
 
-                    keyFreqList.add(keyFreq);
-                }
+                keyFreqList.add(keyFreq);
             }
 
             // build songHits list
-            if (keyFreqList.size() > currentIndex+spacing) {
+            if (keyFreqList.size() > currentIndex) {
                 int[] firstRow = keyFreqList.get(currentIndex);
-                int[] secondRow = keyFreqList.get(currentIndex+spacing);
 
-                int hash = gethashFor(firstRow, secondRow);
+                int hash = gethashFor(firstRow);
                 if (db.containsKey(hash)) {
                     List<Match> currentMatchList = db.get(hash);
                     totalHits += currentMatchList.size();
@@ -81,17 +78,17 @@ public class PerformMatch {
     }
 
     private static void recordMatch(HashMap<String, Integer> songHits, List<Match> currentMatchList) {
-        for (Match m:currentMatchList) {
+        for (Match m : currentMatchList) {
             if (songHits.containsKey(m.getFileName())) {
                 int n = songHits.get(m.getFileName());
-                songHits.put(m.getFileName(), n+1);
+                songHits.put(m.getFileName(), n + 1);
             } else {
                 songHits.put(m.getFileName(), 1);
             }
         }
     }
 
-    private static HashMap<Integer, List<Match>> buildDatabase(String dataDir, int spacing) {
+    private static HashMap<Integer, List<Match>> buildDatabase(String dataDir) {
         HashMap<Integer, List<Match>> db = new HashMap<>();
 
         File[] files = new File(dataDir).listFiles();
@@ -100,7 +97,7 @@ public class PerformMatch {
                 System.out.println("Processing: " + file.getName());
 
                 List<int[]> keyFreqList = loadFingerprintsFrom(file);
-                loadDbWithPrints(db, keyFreqList, file.getName(), spacing);
+                loadDbWithPrints(db, keyFreqList, file.getName());
 
                 System.out.println("********************LOADED!***************************");
             } else {
@@ -111,22 +108,20 @@ public class PerformMatch {
         return db;
     }
 
-    private static void loadDbWithPrints(HashMap<Integer, List<Match>> db, List<int[]> keyFreqList, String songName, int spacing) {
-        for (int i = 0; i < keyFreqList.size() - spacing - 1; i++) {
+    private static void loadDbWithPrints(HashMap<Integer, List<Match>> db, List<int[]> keyFreqList, String songName) {
+        for (int i = 0; i < keyFreqList.size() - 1; i++) {
             int[] firstRow = keyFreqList.get(i);
-            int[] secondRow = keyFreqList.get(i+spacing);
 
-            int hash = gethashFor(firstRow, secondRow);
+            int hash = gethashFor(firstRow);
             Match match = new Match(songName, i);
             store(db, hash, match);
         }
     }
 
     // TODO: cheap easy to program hash; replace with better one later
-    private static int gethashFor(int[] firstRow, int[] secondRow) {
+    private static int gethashFor(int[] firstRow) {
         String s1 = Arrays.toString(firstRow);
-        String s2 = Arrays.toString(secondRow);
-        String val = s1+s2;
+        String val = s1;
         return val.hashCode();
     }
 
