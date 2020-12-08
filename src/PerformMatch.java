@@ -10,11 +10,11 @@ public class PerformMatch {
     private static final int CHUNK_SIZE = 4096;
 
     public static void main(String[] args) {
-        HashMap<Long, List<Match>> database = buildDatabase("prints/", 0);
+        HashMap<Integer, List<Match>> database = buildDatabase("prints/", 0);
         performMatch(database,0);
     }
 
-    private static void performMatch(HashMap<Long, List<Match>> db, int spacing) {
+    private static void performMatch(HashMap<Integer, List<Match>> db, int spacing) {
         HashMap<String, Integer> songHits = new HashMap<>();
 
         int totalHits = 0;
@@ -58,7 +58,7 @@ public class PerformMatch {
                 int[] firstRow = keyFreqList.get(currentIndex);
                 int[] secondRow = keyFreqList.get(currentIndex+spacing);
 
-                Long hash = gethashFor(firstRow, secondRow);
+                int hash = gethashFor(firstRow, secondRow);
                 if (db.containsKey(hash)) {
                     List<Match> currentMatchList = db.get(hash);
                     totalHits += currentMatchList.size();
@@ -91,8 +91,8 @@ public class PerformMatch {
         }
     }
 
-    private static HashMap<Long, List<Match>> buildDatabase(String dataDir, int spacing) {
-        HashMap<Long, List<Match>> db = new HashMap<>();
+    private static HashMap<Integer, List<Match>> buildDatabase(String dataDir, int spacing) {
+        HashMap<Integer, List<Match>> db = new HashMap<>();
 
         File[] files = new File(dataDir).listFiles();
         for (File file : files) {
@@ -111,26 +111,26 @@ public class PerformMatch {
         return db;
     }
 
-    private static void loadDbWithPrints(HashMap<Long, List<Match>> db, List<int[]> keyFreqList, String songName, int spacing) {
+    private static void loadDbWithPrints(HashMap<Integer, List<Match>> db, List<int[]> keyFreqList, String songName, int spacing) {
         for (int i = 0; i < keyFreqList.size() - spacing - 1; i++) {
             int[] firstRow = keyFreqList.get(i);
             int[] secondRow = keyFreqList.get(i+spacing);
 
-            Long hash = gethashFor(firstRow, secondRow);
+            int hash = gethashFor(firstRow, secondRow);
             Match match = new Match(songName, i);
             store(db, hash, match);
         }
     }
 
     // TODO: cheap easy to program hash; replace with better one later
-    private static Long gethashFor(int[] firstRow, int[] secondRow) {
+    private static int gethashFor(int[] firstRow, int[] secondRow) {
         String s1 = Arrays.toString(firstRow);
         String s2 = Arrays.toString(secondRow);
         String val = s1+s2;
-        return new Long(val.hashCode());
+        return val.hashCode();
     }
 
-    private static void store(HashMap<Long, List<Match>> db, Long hash, Match match) {
+    private static void store(HashMap<Integer, List<Match>> db, int hash, Match match) {
         if (db.containsKey(hash)) {
             List<Match> matches = db.get(hash);
             matches.add(match);

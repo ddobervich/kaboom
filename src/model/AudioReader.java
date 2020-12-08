@@ -207,14 +207,25 @@ public class AudioReader {
     public byte[] readAllData() {
         ByteArrayOutputStream out = this.getOutputStream();
 
+        System.out.println("Waiting for audio stream...");
         while (!this.isRunning()) {
-            System.out.println("Waiting for audio stream...");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
+            System.out.print(".");
         }
+        System.out.println();
 
         System.out.println("Loading audio.");
         while (this.isRunning()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+            }
             System.out.print(".");
         }
+        System.out.println();
 
         return out.toByteArray();
     }
