@@ -6,7 +6,6 @@ import javax.sound.sampled.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /***
  * Substantial sections of this code adapted from https://github.com/wsieroci/audio-recognizer
@@ -44,6 +43,10 @@ import java.util.ArrayList;
 public class AudioReader {
     private ByteArrayOutputStream out;
     private boolean running = false;
+
+    public AudioReader() {
+        System.err.println("Do not construct the AudioReader.  Use AudioReader.getMicStream(...) or AudioReader.getAudioStreamFor(...)");
+    }
 
     /***
      * Return AudioReader with OutputStream for mic.  Only active for maxTime.  Unfortunately the units for
