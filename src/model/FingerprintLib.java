@@ -1,6 +1,7 @@
 package model;
 
 import java.io.*;
+import java.nio.channels.ClosedByInterruptException;
 import java.util.ArrayList;
 
 /***
@@ -15,8 +16,6 @@ public class FingerprintLib {
     // frequency ranges for identifying loudest frequencies for fingerprints.  I've been getting better results
     // with 3 intervals rather than 4.
     public static final int[] RANGES = new int[] {40,120,180,301};
-    private static final int LOWER_FREQ_LIM = RANGES[0];
-    private static final int UPPER_FREQ_LIM = RANGES[RANGES.length-1]-1;
 
     // Windows use to use in FFT.  With sample rate of 44.1 khz = 0.0928 seconds for window size.
     private static final int WINDOW_SIZE = 4096;
@@ -127,26 +126,36 @@ public class FingerprintLib {
         }
     }
 
+    /***
+     * Return array of the loudest frequency in each of the frequency bands described by RANGES field.
+     * @param results output of FFT.  Indexes correspond to frequencies, and results[i].abs() represents
+     * the volume of the the frequency corresponding to element i.
+     * @return array of the loudest frequency in each of the frequency bands described by RANGES field
+     */
     public static int[] getKeyFrequenciesFor(Complex[] results) {
-        double[] highscores = new double[RANGES.length-1];
-        int[] recordPoints = new int[RANGES.length-1];
+        int[] keyFrequencies = new int[RANGES.length-1];
+        for (int i = 0; i < RANGES.length - 1; i++) {
+            int lowFreq = RANGES[i];
+            int highFreq = RANGES[i+1];
+            int loudestFreq = getLoudestFreqInRange(lowFreq, highFreq, results);
+            keyFrequencies[i] = loudestFreq;
+        }
 
-        for (int freq = LOWER_FREQ_LIM; freq < UPPER_FREQ_LIM; freq++) {
+        return keyFrequencies;
+    }
 
-            //Get the magnitude:
-            double mag = Math.log(results[freq].abs() + 1);
+    private static int getLoudestFreqInRange(int lowFreq, int highFreq, Complex[] results) {
+        int loudestFreq = lowFreq;
+        double maxVolume = results[loudestFreq].abs();
 
-            //Find out which range we are in:
-            int index = getIndex(freq);
-
-            //Save the highest magnitude and corresponding frequency:
-            if (mag > highscores[index]) {
-                highscores[index] = mag;
-                recordPoints[index] = freq;
+        for (int i = lowFreq; i < highFreq; i++) {
+            if (results[i].abs() > maxVolume) {
+                maxVolume = results[i].abs();
+                loudestFreq = i;
             }
         }
 
-        return recordPoints;
+        return loudestFreq;
     }
 
     /***
