@@ -15,7 +15,7 @@ public class WavePlotter extends PApplet {
     }
 
     public void setup() {
-        plt = new TimeSeriesPlot(0, 0, 800, 800, 200);
+        plt = new TimeSeriesPlot(0, 0, 800, 800, 800);
 
         plt.set(Plot.Setting.show_axes, true);
         plt.set(Plot.Setting.show_border, true);
