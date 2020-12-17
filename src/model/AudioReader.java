@@ -6,6 +6,7 @@ import javax.sound.sampled.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /***
  * Substantial sections of this code adapted from https://github.com/wsieroci/audio-recognizer
@@ -46,6 +47,37 @@ public class AudioReader {
 
     public AudioReader() {
         System.err.println("Do not construct the AudioReader.  Use AudioReader.getMicStream(...) or AudioReader.getAudioStreamFor(...)");
+    }
+
+    public static AudioReader getAudioStreamForLine(TargetDataLine line, int maxTime) throws LineUnavailableException {
+        AudioReader reader = new AudioReader();
+        AudioFormat format = getFormat();
+        line.open(format);
+        line.start();
+        reader.out = reader.getOutputStreamFor(line,maxTime);
+        return reader;
+    }
+
+    public static ArrayList<TargetDataLine> getWorkingMicLines() {
+        Mixer.Info[] mixerInfos = AudioSystem.getMixerInfo();
+        ArrayList<TargetDataLine> workingLines = new ArrayList<>();
+        int count = 0;
+        for ( Mixer.Info mixerInfo : mixerInfos ) {
+            Mixer m = AudioSystem.getMixer(mixerInfo);
+            System.out.println("Testing mixer: " + count);
+            AudioFormat audioFormat = getFormat();
+            Line.Info info = new DataLine.Info(TargetDataLine.class, audioFormat);
+            try {
+                TargetDataLine myline = (TargetDataLine) m.getLine(info);
+                System.out.println("Worked!");
+                workingLines.add(myline);
+            } catch (Exception e) {
+                System.out.println("failed.");
+            }
+            count++;
+        }
+
+        return workingLines;
     }
 
     /***
