@@ -1,10 +1,12 @@
 import model.Complex;
 import model.FFT;
 import model.AudioReader;
+import model.FingerprintLib;
 import processing.core.PApplet;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class SpectrographPlotter extends PApplet {
     // ---- DISPLAY VARIABLES ----
@@ -47,6 +49,10 @@ public class SpectrographPlotter extends PApplet {
         if (fftFrames.size() > 0) {                            // if undisplayed frames left
             Complex[] frame = fftFrames.remove(0);       // remove oldest frame and display
             displayFrameAtCol(frame, currentCol, 1);
+
+            int[] keyFrequencies = FingerprintLib.getKeyFrequenciesFor(frame);
+            System.out.println(Arrays.toString(keyFrequencies));
+
             currentCol += blockSizeX;
 
             if (currentCol > this.width) {                     // screen wrap display
@@ -75,8 +81,19 @@ public class SpectrographPlotter extends PApplet {
             stroke(fillColor);
             rect(currentCol, yval, blockSizeX, blockSizeY);
         }
+
+        int[] keyFreq = FingerprintLib.getKeyFrequenciesFor(frame);
+        highlightKeyFrequencies(keyFreq, maxFreq);
     }
 
+    private void highlightKeyFrequencies(int[] keyFreq, int maxFreq) {
+        for ( Integer freq : keyFreq ) {
+            stroke(color(255, 0,0));
+            fill(color(255,0,0));
+            float yval = map(freq, 0, maxFreq, 800, 0);
+            ellipse(currentCol, yval, 3, 3);
+        }
+    }
 
     public static void main(String[] args) {
         PApplet.main("SpectrographPlotter");
